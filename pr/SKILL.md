@@ -14,7 +14,13 @@ Open a draft pull request for the current branch against the repo's default bran
 
 3. **Push the branch.** If the branch has no upstream (`git rev-parse --abbrev-ref @{u}` fails), `git push -u origin <head>`; otherwise `git push`. _Done when the remote head matches local HEAD._
 
-4. **Compose title and body.** Read `git log <base>..HEAD --oneline` and `git diff <base>...HEAD --stat` — base the content on what changed, never on guesses. Follow the [body format](#body-format). _Done when title and body reflect every commit in the range._
+4. **Compose title and body.** Read `git log <base>..HEAD --oneline` and `git diff <base>...HEAD --stat` — base the content on what changed, never on guesses.
+
+   If it exists, set the ticket identifier as title prefix part (e.g. `[DS-146] Fix the bug in the payment flow`).
+
+   For the PR body, follow the body format below.
+
+   _Done when title and body reflect every commit in the range._
 
 5. **Create the draft.** `gh pr create --draft --base <base> --head <head> --title "<title>" --body "<body>"`. Report the returned URL. _Done when the URL is printed._
 
