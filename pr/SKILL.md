@@ -1,6 +1,6 @@
 ---
 name: pr
-description: "Use when writing a PR body."
+description: "Use when opening a draft PR for the current branch, or when writing a PR body."
 metadata:
   credits:
     skill: show-me
@@ -8,6 +8,29 @@ metadata:
     organisation: Humanlayer
     url: "https://github.com/humanlayer/skills/blob/main/plugins/show-me/skills/show-me/SKILL.md"
 ---
+
+Open a draft pull request for the current branch against the repo's default branch. Base the title and body on the branch's real commits and diff. Run the steps in order. Each step ends on a condition you can check.
+
+If the user only asks for a PR body, skip the steps. Write the body (step 4, body only) and return it without pushing or creating anything.
+
+## Steps
+
+1. **Establish base and head.** Head is `git branch --show-current`. Base is the repo default branch: `gh repo view --json defaultBranchRef -q .defaultBranchRef.name` (fall back to the name in `git symbolic-ref refs/remotes/origin/HEAD`). If head equals base, stop and tell the user that a PR cannot be opened from the default branch. _Done when both names are known and head ≠ base._
+
+2. **Check for an existing PR.** Run `gh pr list --head <head> --state open`. If a PR already exists, report its URL and stop. Never open a duplicate. _Done when the list is empty, or you have stopped._
+
+3. **Push the branch.** If the branch has no upstream (`git rev-parse --abbrev-ref @{u}` fails), run `git push -u origin <head>`. Otherwise run `git push`. _Done when the remote head matches local HEAD._
+
+4. **Compose title and body.** Read `git log <base>..HEAD --oneline` and `git diff <base>...HEAD`. Base the content on what changed, never on guesses.
+
+   - **Title:** a short imperative summary. If the branch name contains an issue key (e.g. `DS-146`, `ABC-1234`), use it as the title prefix: `[DS-146] Fix the bug in the payment flow`.
+   - **Body:** follow the [PR body](#pr-body) template and section guidance below.
+
+   _Done when the title and body cover every commit in the range._
+
+5. **Create the draft.** Write the body to a temp file and run `gh pr create --draft --base <base> --head <head> --title "<title>" --body-file <file>`. A file keeps backticks, code fences, and Mermaid intact. Report the returned URL. _Done when the URL is printed._
+
+## PR body
 
 Use this template for writing the PR body:
 
@@ -32,9 +55,7 @@ Use this template for writing the PR body:
 <optional: potential ramifications of merge>
 ```
 
-## Sections
-
-Skip all preambles and keep prose brief. Use the user's domain language from `GLOSSARY.md`.
+Skip all preambles and keep prose brief. Use the user's domain language from `GLOSSARY.md` when the repo has one.
 
 ### Summary
 
@@ -149,11 +170,11 @@ function expandSkill(command: string): string {
 }
 ```
 
-#### Guidance
+#### Choosing a view
 
-Place each visual next to the short text it supports. Keep only the calls, files, props, states, and boundaries needed to answer the user's current question or the options to resolve the current discussion point.
+Place each visual next to the short text it supports. Keep only the calls, files, props, states, and boundaries needed to explain this change to a reviewer.
 
-You may use one of these, you may use several, it is unlikely you will use all of them. Use your judgement and don't overwhelm the user.
+You may use one of these, you may use several, it is unlikely you will use all of them. Use your judgement and don't overwhelm the reviewer.
 
 ### Evidence
 
